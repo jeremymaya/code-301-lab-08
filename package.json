@@ -1,13 +1,14 @@
 {
-  "name": "code-301-lab-06",
-  "version": "1.0.0",
-  "description": "**Author**: Biniam Tesfamariam and Kyungrae Kim **Version**: 1.0.0 (increment the patch/fix version number if you make more commits past your first submission)",
+  "name": "code-301-lab-08",
+  "version": "1.0.2",
+  "description": "**Author**: Jonathan Kimball and Kyungrae Kim **Version**: 1.0.2",
   "main": "server.js",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^8.1.0",
     "eslint": "^6.4.0",
     "express": "^4.17.1",
+    "pg": "^7.12.1",
     "superagent": "^5.1.0"
   },
   "devDependencies": {},
@@ -17,13 +18,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jeremymaya/code-301-lab-06.git"
+    "url": "git+https://github.com/jeremymaya/code-301-lab-08.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/jeremymaya/code-301-lab-06/issues"
+    "url": "https://github.com/jeremymaya/code-301-lab-08/issues"
   },
-  "homepage": "https://github.com/jeremymaya/code-301-lab-06#readme"
+  "homepage": "https://github.com/jeremymaya/code-301-lab-08#readme"
 }

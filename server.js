@@ -1,40 +1,51 @@
 'use strict';
 
 // server setup
-const express = require('express');
-const app = express();
-const cors = require('cors');
-const PORT = process.env.PORT || 3000;
 require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
 const superagent = require('superagent');
+const pg = require('pg');
+
+const PORT = process.env.PORT || 3000;
+const app = express();
 app.use(cors());
 
-//global variables
-let latitude;
-let longitude;
+app.get('/location', getLocation);
+app.get('/weather', getWeather);
+app.get('/events', getEvents);
 
-app.get('/location', (request, response) =>{
-  let searchQuery = request.query.data;
+function getLocation(request, response) {
+  const searchQuery = request.query.data;
   const URL = `https://maps.googleapis.com/maps/api/geocode/json?address=${searchQuery}&key=${process.env.GEOCODE_API_KEY}`;
 
   superagent.get(URL)
     .then(superagentResults => {
-      let locationData = superagentResults.body.results[0];
+      const locationData = superagentResults.body.results[0];
       const location = new Location(searchQuery, locationData);
-      latitude = location.latitude;
-      longitude = location.longitude;
       response.status(200).send(location);
     })
     .catch(error => {
       handleError(error, response);
     })
-})
+}
 
-app.get('/weather', (request, response) => {
-  const URL = `https://api.darksky.net/forecast/${process.env.WEATHER_API_KEY}/${latitude},${longitude}`
+function Location(searchQuery, locationData){
+  this.search_query = searchQuery;
+  this.formatted_query = locationData.formatted_address;
+  this.latitude = locationData.geometry.location.lat;
+  this.longitude = locationData.geometry.location.lng;
+}
+
+function getWeather(request, response) {
+  const searchQuery = request.query.data;
+  const latitude = searchQuery.latitude;
+  const longitude = searchQuery.longitude;
+  const URL = `https://api.darksky.net/forecast/${process.env.WEATHER_API_KEY}/${latitude},${longitude}`;
+
   superagent.get(URL)
     .then(superagentResults => {
-      let weatherData = superagentResults.body.daily.data;
+      const weatherData = superagentResults.body.daily.data;
       const weatherForecast = weatherData.map(obj => {
         return new Weather(obj);
       })
@@ -43,9 +54,22 @@ app.get('/weather', (request, response) => {
     .catch(error => {
       handleError(error, response);
     })
-})
+}
 
-app.get('/events', (request, response) => {
+function Weather(obj){
+  this.forecast = obj.summary;
+  this.time = this.formattedDate(obj.time);
+}
+
+Weather.prototype.formattedDate = function(time) {
+  const date = new Date(time*1000);
+  return date.toDateString();
+}
+
+function getEvents(request, response) {
+  const searchQuery = request.query.data;
+  const latitude = searchQuery.latitude;
+  const longitude = searchQuery.longitude;
   const URL = `https://www.eventbriteapi.com/v3/events/search?location.longitude=${longitude}&location.latitude=${latitude}&expand=venue&token=${process.env.EVENTBRITE_API_KEY}`;
 
   superagent.get(URL)
@@ -59,23 +83,6 @@ app.get('/events', (request, response) => {
     .catch(error => {
       handleError(error, response);
     })
-})
-
-function Location(searchQuery, locationData){
-  this.search_query = searchQuery;
-  this.formatted_query = locationData.formatted_address;
-  this.latitude = locationData.geometry.location.lat;
-  this.longitude = locationData.geometry.location.lng;
-}
-
-function Weather(obj){
-  this.forecast = obj.summary;
-  this.time = this.formattedDate(obj.time);
-}
-
-Weather.prototype.formattedDate = function(time) {
-  let date = new Date(time*1000);
-  return date.toDateString();
 }
 
 function Event(obj){
@@ -86,12 +93,11 @@ function Event(obj){
 }
 
 function handleError(error, response){
-  console.error(error);
   const errorObj = {
     status: 500,
-    text: 'Sorry, something went wrong'
+    text: 'Sorry, something went wrong (Error: 500)'
   }
-  response.status(500).send(errorObj);
+  response.status(error.status).send(errorObj);
 }
 
 app.listen(PORT, () => console.log(`listening on ${PORT}`));
